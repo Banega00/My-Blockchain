@@ -4,16 +4,44 @@ import { PubSubFactory } from "../communication/PubSubFactory";
 import { TransactionMiner } from "../TransactionMiner";
 import { TransactionPool } from "../TransactionPool";
 import { Wallet } from "../Wallet";
+import { readFileSync, writeFileSync } from 'fs';
+import { BlockchainState, getBlockchainState, saveBlockchainState } from "../storage/state-management";
 
-const blockchain = new Blockchain();
-const transactionPool = new TransactionPool();
-const wallet = new Wallet();
+let blockchain:Blockchain;
+let transactionPool:TransactionPool;
+let wallet:Wallet;
 
 const pubsub = PubSubFactory.getInstance();
+
+
+
+
+try{
+    
+    let initialData: BlockchainState = getBlockchainState();
+    
+    if(!initialData) throw new Error("No initial data")
+    if(!initialData.blockchain || !initialData.transactionPool || !initialData.wallet) throw new Error("Invalid initial data") 
+
+    blockchain = initialData.blockchain;
+    transactionPool = initialData.transactionPool;
+    wallet = initialData.wallet;
+    
+}catch(error){
+    //create new initial data
+
+    blockchain = new Blockchain();
+    transactionPool = new TransactionPool();
+    wallet = new Wallet();
+
+    saveBlockchainState({blockchain, transactionPool, wallet})
+}
 
 pubsub.blockchain = blockchain;
 pubsub.transactionPool = transactionPool;
 pubsub.wallet = wallet;
+
+console.log(`Wallet address ${wallet.publicKey}`)
 
 const transactionMiner = new TransactionMiner({ blockchain, transactionPool, wallet, pubsub });
 
@@ -52,6 +80,8 @@ router.post('/mine', (request: Request, response: Response) => {
     pubsub.broadcastChain();
 
     response.redirect('/api/blocks');
+
+    saveBlockchainState({blockchain, wallet, transactionPool})
 });
 
 //add transaction to transaction pool
@@ -86,6 +116,7 @@ router.post('/transact', (
     pubsub.broadcastTransaction(transaction);
 
     response.json({ type: 'success', transaction });
+    saveBlockchainState({blockchain, wallet, transactionPool})
 });
 
 //get transactions from transaction pool
@@ -97,6 +128,7 @@ router.post('/mine-transactions', (request: Request, response: Response) => {
     transactionMiner.mineTransactions();
 
     response.redirect('/api/blocks');
+    saveBlockchainState({blockchain, wallet, transactionPool})
 });
 
 //get info about your own wallet
