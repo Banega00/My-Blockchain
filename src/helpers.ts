@@ -19,5 +19,5 @@ export const ecliptic = new ec('secp256k1');
 export const verifySignature = ({ publicKey, data, signature }) => {
   const keyFromPublic = ecliptic.keyFromPublic(publicKey, 'hex');
 
-  return keyFromPublic.verify(calculateHash(data), signature);
+  return keyFromPublic.verify(calculateHash(concatAndStringify(data)), signature);
 };

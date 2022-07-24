@@ -1,18 +1,19 @@
 import { Wallet } from "./Wallet";
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import { verifySignature } from "./helpers";
 import { REWARD_INPUT, MINING_REWARD } from "./config";
 
 export class Transaction {
   private id: string;
-  private outputMap:{recipient?: any, [key:string]:number};
+  public outputMap:{recipient?: any, [key:string]:number};
   public input:{timestamp: number, amount: number, address: Wallet['publicKey'], signature:any};
   
   constructor(obj:{ senderWallet?: Wallet, recipient?: Wallet['publicKey'], amount?:number, outputMap?: Transaction['outputMap'], input?:any }) {
     const {senderWallet, recipient, amount, outputMap, input} = obj;
-    this.id = uuid();
+    this.id = uuidv4();
     this.outputMap = outputMap || this.createOutputMap({ senderWallet, recipient, amount });
     this.input = input || this.createInput({ senderWallet, outputMap: this.outputMap });
+    
   }
 
   createOutputMap({ senderWallet, recipient, amount }) {
@@ -77,5 +78,3 @@ export class Transaction {
     });
   }
 }
-
-module.exports = Transaction;

@@ -1,12 +1,13 @@
 import { GENESIS_DATA, MINE_RATE } from "./config";
 import { calculateHash, concatAndStringify } from "./helpers";
+import { Transaction } from "./Transaction";
 const hexToBinary = require('hex-to-binary');
  
 export class Block {
     private timestamp: number;
     private previousHash: string;
     private hash: string;
-    public data: any;
+    public data: Transaction[];
     private nonce: number;
     private difficulty: number;
 

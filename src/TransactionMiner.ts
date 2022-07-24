@@ -20,6 +20,10 @@ export class TransactionMiner {
   mineTransactions() {
     const validTransactions = this.transactionPool.validTransactions();
 
+    if(!validTransactions || validTransactions.length <= 0){
+      throw new Error('No transaction in transaction pool')
+    }
+
     validTransactions.push(
       Transaction.rewardTransaction({ minerWallet: this.wallet })
     );

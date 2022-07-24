@@ -1,9 +1,6 @@
 import PubNub from 'pubnub';
 import { v4 as  uuidv4 } from 'uuid';
-import { Blockchain } from '../Blockchain';
-import { TransactionPool } from '../TransactionPool';
-import { Wallet } from '../Wallet';
-import { CHANNELS, PubSub, MessageEvent } from './PubSub';
+import { CHANNELS, PubSub } from './PubSub';
 
 
 

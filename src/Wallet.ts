@@ -2,8 +2,7 @@ import { ec } from "elliptic";
 import { Blockchain } from "./Blockchain";
 import { STARTING_BALANCE } from "./config";
 import { calculateHash, concatAndStringify, ecliptic } from "./helpers";
-import { Transaction } from "./Transaction";
-
+import { Transaction } from './Transaction';
 export class Wallet {
   private balance: number;
   private keyPair: ec.KeyPair
@@ -30,7 +29,7 @@ export class Wallet {
     if (amount > this.balance) {
       throw new Error('Amount exceeds balance');
     }
-
+    
     return new Transaction({ senderWallet: this, recipient, amount });
   }
 
