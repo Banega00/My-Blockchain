@@ -1,6 +1,7 @@
 import axios from "axios";
 
 export class BlockchainService{
+    
     private static api_url = `http://localhost:3001/api`;
 
     public static getWalletInfo = async() =>{
@@ -14,6 +15,11 @@ export class BlockchainService{
     }
 
     public static submitTransaction = async (recipient: string, amount: number) =>{
-        const response = await axios(`${this.api_url}/transact`, {data:{recipient, amount}, method:'POST'})
+        const response = await axios(`${this.api_url}/transact`, { data: { recipient, amount }, method: 'POST' })
+    }
+
+    public static getBlockchain = async () => {
+        const response = await axios(`${this.api_url}/blocks`)
+        return response.data;
     }
 }

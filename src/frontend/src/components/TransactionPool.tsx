@@ -17,10 +17,10 @@ export const TransactionPool:React.FC<{transactionPool:ITransactionPool | undefi
             </Typography>
             {
                 transactionPool ?
-                    <Card sx={{ backgroundColor: 'rgba(255, 255, 255,0.75)', p: 2, mb: 4 }} elevation={2}>
+                    <Card sx={{ backgroundColor: 'rgba(255, 255, 255,0.75)', p: 2, mb: 4, pr: 1, pl: 1 }} elevation={2}>
                         <CardContent>
                             <Typography><b>{Object.values(transactionPool).length}</b> transactions in pool</Typography>
-                            <Divider orientation="horizontal" variant='middle'/>
+                            <Divider sx={{mb:1}} orientation="horizontal" variant='middle'/>
                             {Object.values(transactionPool).map(transaction => <Transaction transaction={transaction}/>)}
                         </CardContent>
                     </Card>

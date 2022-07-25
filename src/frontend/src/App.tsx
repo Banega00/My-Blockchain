@@ -9,18 +9,23 @@ import { BlockchainService } from './services/Blockchain.service';
 function App() {
   const [wallet, setWallet] = useState<{ address: string, balance: number } | undefined>(undefined)
   const [transactionPool, setTransactionPool] = useState<ITransactionPool | undefined>(undefined)
-  const [blockchain, setBlockchain] = useState<IBlockchain | undefined>(undefined);
+  const [blockchain, setBlockchain] = useState<IBlockchain['chain'] | undefined>(undefined);
 
   useEffect(() => {
-
-    BlockchainService.getWalletInfo()
+    const interval = setInterval(() => {
+      BlockchainService.getWalletInfo()
       .then(wallet => setWallet(wallet))
       .catch(console.log)
-
 
     BlockchainService.getTransactionPool()
       .then(transactionPool => setTransactionPool(transactionPool))
       .catch(console.log)
+
+    BlockchainService.getBlockchain()
+      .then(blockchain => setBlockchain(blockchain))
+      .catch(console.log)
+    }, 20000)
+    
   }, [])
 
   return (

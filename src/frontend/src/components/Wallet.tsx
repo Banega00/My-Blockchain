@@ -38,7 +38,7 @@ export const Wallet:React.FC<{wallet:{address: string, balance: number} | undefi
                     <>
                         <Card sx={{ backgroundColor: 'rgba(255, 255, 255,0.75)', p: 2, mb: 4 }} elevation={2}>
                             <CardContent>
-                                <Typography sx={{wordWrap:'break-word'}}>Address: <b>{wallet.address}</b></Typography>
+                                <Typography sx={{wordWrap:'break-word'}}>Address: <br/><b style={{wordBreak:'break-all'}}>{wallet.address}</b></Typography>
                                 <Typography>Balance: <b>{wallet.balance}</b></Typography>
                             </CardContent>
                         </Card>
