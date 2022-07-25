@@ -6,8 +6,8 @@ import { Wallet } from "./Wallet";
 
 export class Blockchain {
     public chain:Block[];
-    constructor() {
-      this.chain = [Block.genesis()];
+    constructor(chain?:Block[]) {
+      this.chain = chain ?? [Block.genesis()];
     }
   
     addBlock({ data }) {

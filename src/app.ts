@@ -3,13 +3,13 @@ import dotenv from 'dotenv';
 import path from 'path';
 import bodyParser from 'body-parser';
 import { ApiRouter } from './routes/api.routes';
-
+import cors from 'cors'
 dotenv.config();
 
 const app = express();
 
 export default app;
-
+app.use(cors())
 app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, 'client/dist')));

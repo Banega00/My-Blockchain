@@ -19,7 +19,7 @@ export class RedisPubSub extends PubSub{
 
         this.subscribeToChannels();
 
-        console.log('Successfully subscribed to Redis Channels')
+        console.log('Successfully subscribed to Redis Channels:', Object.values(CHANNELS).join(" "))
 
         this.subscriber.on(
             'message',

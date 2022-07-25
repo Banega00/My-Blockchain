@@ -1,16 +1,25 @@
 import { ec } from "elliptic";
 import { Blockchain } from "./Blockchain";
 import { STARTING_BALANCE } from "./config";
-import { calculateHash, concatAndStringify, ecliptic } from "./helpers";
+import { calculateHash, concatAndStringify, elliptic } from "./helpers";
 import { Transaction } from './Transaction';
 export class Wallet {
-  private balance: number;
-  private keyPair: ec.KeyPair
+  public balance: number;
+  public keyPair: ec.KeyPair
   public publicKey: string;
-  constructor() {
-    this.balance = STARTING_BALANCE;
-    this.keyPair = ecliptic.genKeyPair();
+  constructor(wallet?:Partial<Wallet>) {
+    
+    this.balance = wallet?.balance ?? STARTING_BALANCE;
+
+    if(wallet?.keyPair){
+      const keyPair = wallet.keyPair as any;
+      this.keyPair = elliptic.keyFromPrivate(keyPair.priv)
+    }else{
+      this.keyPair = elliptic.genKeyPair();
+    }
     this.publicKey = this.keyPair.getPublic().encode('hex', true);
+
+    console.log('Keys generated!')
   }
 
   sign(data) {

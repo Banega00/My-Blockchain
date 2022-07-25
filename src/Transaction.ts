@@ -8,9 +8,9 @@ export class Transaction {
   public outputMap:{recipient?: any, [key:string]:number};
   public input:{timestamp: number, amount: number, address: Wallet['publicKey'], signature:any};
   
-  constructor(obj:{ senderWallet?: Wallet, recipient?: Wallet['publicKey'], amount?:number, outputMap?: Transaction['outputMap'], input?:any }) {
-    const {senderWallet, recipient, amount, outputMap, input} = obj;
-    this.id = uuidv4();
+  constructor(obj:{ id?:string, senderWallet?: Wallet, recipient?: Wallet['publicKey'], amount?:number, outputMap?: Transaction['outputMap'], input?:any }) {
+    const {id, senderWallet, recipient, amount, outputMap, input} = obj;
+    this.id = id ?? uuidv4();
     this.outputMap = outputMap || this.createOutputMap({ senderWallet, recipient, amount });
     this.input = input || this.createInput({ senderWallet, outputMap: this.outputMap });
     

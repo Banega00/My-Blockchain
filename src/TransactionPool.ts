@@ -3,8 +3,14 @@ import { Transaction } from "./Transaction";
 export class TransactionPool {
     public transactionMap:{[key:string]: Transaction}; //{transactionId: TransactionObject}
 
-    constructor() {
-      this.transactionMap = {};
+    constructor(transactionMap?: TransactionPool['transactionMap']) {
+      if(transactionMap){
+        Object.entries(transactionMap).forEach(([key, value]) => {
+          transactionMap[key] = new Transaction({...value});
+        })
+
+      }
+      this.transactionMap = transactionMap ?? {}
     }
   
     clear() {

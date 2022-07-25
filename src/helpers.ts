@@ -14,10 +14,10 @@ export const calculateHash = (data:string, options?:{algorithm: AllowedHashAlgor
     .toString()
 }
 
-export const ecliptic = new ec('secp256k1');
+export const elliptic = new ec('secp256k1');
 
 export const verifySignature = ({ publicKey, data, signature }) => {
-  const keyFromPublic = ecliptic.keyFromPublic(publicKey, 'hex');
+  const keyFromPublic = elliptic.keyFromPublic(publicKey, 'hex');
 
   return keyFromPublic.verify(calculateHash(concatAndStringify(data)), signature);
 };

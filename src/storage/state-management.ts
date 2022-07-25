@@ -30,6 +30,13 @@ export const saveBlockchainState = (newBlockchainState:Partial<BlockchainState>)
 
 export const getBlockchainState = ():BlockchainState =>{
     let dataBuffer = readFileSync('./data/blockchain-data')
-    let blockchainState:BlockchainState = JSON.parse(dataBuffer.toString());
+    let blockchainState = JSON.parse(dataBuffer.toString());
+
+    if(blockchainState){
+        blockchainState.transactionPool = new TransactionPool(blockchainState.transactionPool.transactionMap)
+        blockchainState.wallet = new Wallet({...blockchainState.wallet})
+        blockchainState.blockchain = new Blockchain(blockchainState.blockchain.chain);
+    }
+
     return blockchainState;
 }

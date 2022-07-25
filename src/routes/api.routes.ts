@@ -4,7 +4,6 @@ import { PubSubFactory } from "../communication/PubSubFactory";
 import { TransactionMiner } from "../TransactionMiner";
 import { TransactionPool } from "../TransactionPool";
 import { Wallet } from "../Wallet";
-import { readFileSync, writeFileSync } from 'fs';
 import { BlockchainState, getBlockchainState, saveBlockchainState } from "../storage/state-management";
 
 let blockchain:Blockchain;
@@ -23,18 +22,20 @@ try{
     if(!initialData) throw new Error("No initial data")
     if(!initialData.blockchain || !initialData.transactionPool || !initialData.wallet) throw new Error("Invalid initial data") 
 
+    
     blockchain = initialData.blockchain;
-    transactionPool = initialData.transactionPool;
+    transactionPool = initialData.transactionPool
     wallet = initialData.wallet;
     
 }catch(error){
     //create new initial data
-
+    console.log(error);
+    
     blockchain = new Blockchain();
     transactionPool = new TransactionPool();
     wallet = new Wallet();
 
-    saveBlockchainState({blockchain, transactionPool, wallet})
+    saveBlockchainState({blockchain,transactionPool,wallet})
 }
 
 pubsub.blockchain = blockchain;
