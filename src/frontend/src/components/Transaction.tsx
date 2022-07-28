@@ -29,22 +29,38 @@ export const Transaction: React.FC<{ transaction: Transaction }> = ({ transactio
                     id="panel1a-header"
                 >
                     <Box sx={{'& > *': {textAlign:'left', fontSize:'0.8em', color:'#565759'}}}>
-                        <Typography>ID: {transaction.id}</Typography>
+                        <Typography>ID: <b>{transaction.id}</b></Typography>
                         <Divider />
-                        <Typography>Time: {moment(new Date(transaction.input.timestamp)).format('MMM Do YY, h:mm:ss')}</Typography>
+                        <Typography>Time: <b> {moment(new Date(transaction.input.timestamp)).format('MMM Do YY, h:mm:ss')} </b></Typography>
                         <Divider />
-                        <Typography sx={{wordBreak:'break-all', fontSize:'0.8em'}}>Sender: {transaction.input.address}</Typography>
+                        <Typography sx={{wordBreak:'break-all', fontSize:'0.8em'}}>Sender: <b> {transaction.input.address} </b></Typography>
                         <Divider />
-                        <Typography>Total ammount: {Object.entries(transaction.outputMap).reduce((prevValue,[currKey,currValue])=>{
+                        <Typography>Total amount: <b style={{fontSize:'1.2em'}}> {Object.entries(transaction.outputMap).reduce((prevValue,[currKey,currValue])=>{
                             if(currKey == transaction.input.address) return prevValue;
                             return prevValue+currValue;
-                        },0)}</Typography>
+                        },0)} </b></Typography>
                     </Box>
                 </AccordionSummary>
                 <AccordionDetails>
+                    <Divider />
                     <Typography>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-                        malesuada lacus ex, sit amet blandit leo lobortis eget.
+                        {Object.keys(transaction.outputMap).filter(key => key != transaction.input.address).map((key,index)=>{
+                            return (
+                            <Box sx={{textAlign:'left', '& > *':{fontSize:'0.8em', flex: 1, flexBasis:'auto'}, display:'flex'}}> 
+                                <Typography>
+                                    {index+1} | 
+                                </Typography>
+                                <Typography>
+                                    <b>
+                                        {key}
+                                    </b>
+                                </Typography>
+                                <Typography sx={{textAlign: 'right'}}>
+                                    <b>{transaction.outputMap[key]}</b>
+                                </Typography>
+                            </Box>
+                            )
+                        })}
                     </Typography>
                 </AccordionDetails>
             </Accordion>

@@ -22,4 +22,9 @@ export class BlockchainService{
         const response = await axios(`${this.api_url}/blocks`)
         return response.data;
     }
+
+    public static mineTransactions = async () =>{
+        const response = await axios(`${this.api_url}/mine-transactions`, {method: 'POST'})
+        return response.data
+    }
 }

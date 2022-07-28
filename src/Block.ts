@@ -4,12 +4,12 @@ import { Transaction } from "./Transaction";
 const hexToBinary = require('hex-to-binary');
  
 export class Block {
-    private timestamp: number;
-    private previousHash: string;
-    private hash: string;
+    public timestamp: number;
+    public previousHash: string;
+    public hash: string;
     public data: Transaction[];
-    private nonce: number;
-    private difficulty: number;
+    public nonce: number;
+    public difficulty: number;
 
     constructor(obj: { timestamp: Block['timestamp'], previousHash: Block['previousHash'], hash: Block['hash'], data: Block['data'], nonce: Block['nonce'], difficulty: Block['difficulty'] }) {
         this.timestamp = obj.timestamp;

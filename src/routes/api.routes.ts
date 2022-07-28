@@ -12,9 +12,6 @@ let wallet:Wallet;
 
 const pubsub = PubSubFactory.getInstance();
 
-
-
-
 try{
     
     let initialData: BlockchainState = getBlockchainState();

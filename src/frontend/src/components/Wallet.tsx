@@ -20,7 +20,8 @@ export const Wallet:React.FC<{wallet:{address: string, balance: number} | undefi
         await BlockchainService.submitTransaction(transaction?.recipient, transaction?.amount)
         .then(response=>{
             console.log(response)
-            console.log('Transaction successfully submitted');
+            alert('Transaction successfully submitted');
+            setTransaction({recipient:'', amount:0})
         })
         .catch(error=>{
             console.log(error)

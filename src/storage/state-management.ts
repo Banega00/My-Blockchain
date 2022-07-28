@@ -17,19 +17,19 @@ export const saveBlockchainState = (newBlockchainState:Partial<BlockchainState>)
             blockchainState[prop] = newBlockchainState[prop]
         }
 
-        writeFileSync('./data/blockchain-data', JSON.stringify(blockchainState), {encoding:'binary'})
+        writeFileSync(`./data/${process.env.wallet_data}`, JSON.stringify(blockchainState), {encoding:'binary'})
 
         console.log('Blockchain state saved');
     }catch(error){
         //file does not exists - create new
-        writeFileSync('./data/blockchain-data', JSON.stringify(newBlockchainState), {encoding:'binary'})
+        writeFileSync(`./data/${process.env.wallet_data}`, JSON.stringify(newBlockchainState), {encoding:'binary'})
 
         console.log('Blockchain state saved');
     }
 }
 
 export const getBlockchainState = ():BlockchainState =>{
-    let dataBuffer = readFileSync('./data/blockchain-data')
+    let dataBuffer = readFileSync(`./data/${process.env.wallet_data}`)
     let blockchainState = JSON.parse(dataBuffer.toString());
 
     if(blockchainState){
