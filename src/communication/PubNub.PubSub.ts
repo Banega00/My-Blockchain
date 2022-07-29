@@ -1,5 +1,6 @@
 import PubNub from 'pubnub';
 import { v4 as  uuidv4 } from 'uuid';
+import { saveBlockchainState } from '../storage/state-management';
 import { Transaction } from '../Transaction';
 import { CHANNELS, PubSub } from './PubSub';
 
@@ -49,6 +50,7 @@ export class PubNubPubSub extends PubSub {
                     case CHANNELS.TRANSACTION:
                         const newTranscation = new Transaction({id: parsedMessage.id, outputMap: parsedMessage.outputMap, input: parsedMessage.input});
                         this.transactionPool.setTransaction(newTranscation)
+                        saveBlockchainState({ blockchain: this.blockchain, wallet: this.wallet, transactionPool: this.transactionPool })
                         break;
                     default:
                         return;
