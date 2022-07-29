@@ -1,8 +1,9 @@
-import { Box, Card, CardContent, Divider, Typography } from '@mui/material'
+import { Accordion, AccordionDetails, AccordionSummary, Box, Card, CardContent, Divider, Typography } from '@mui/material'
 import React from 'react'
 import { Block as BlockModel } from '../../../Block'
 import moment from 'moment'
 import { binaryToHex } from '../services/helpers'
+import { Transaction } from './Transaction'
 
 export const Block: React.FC<{ block: BlockModel, index: number }> = ({ block, index }) => {
     return (
@@ -19,16 +20,29 @@ export const Block: React.FC<{ block: BlockModel, index: number }> = ({ block, i
                 <Divider />
                 <Typography sx={{ textAlign: 'left', fontSize: '0.6em', wordBreak: 'break-all' }}>
                     <Typography>
-                        Current Block Hash: <span style={{fontWeight:'bold', fontSize:'0.75em'}}>{binaryToHex(block.hash).result}</span>
+                        Current Block Hash: <span style={{ fontWeight: 'bold', fontSize: '0.75em' }}>{binaryToHex(block.hash).result}</span>
                     </Typography>
                     <Typography>
-                        Previous Block Hash: <span style={{fontWeight:'bold', fontSize:'0.75em'}}>{binaryToHex(block.previousHash).result}</span>
+                        Previous Block Hash: <span style={{ fontWeight: 'bold', fontSize: '0.75em' }}>{binaryToHex(block.previousHash).result}</span>
                     </Typography>
                 </Typography>
                 <Divider />
 
                 <Box sx={{ p: 1 }}>
-                    Data
+                    <Accordion>
+                        <AccordionSummary>
+                            <Typography sx={{ width: '33%', flexShrink: 0 }}>
+                                Transactions
+                            </Typography>
+                            <Typography sx={{ color: 'text.secondary' }}>{block.data.length}</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Divider/>
+                            {block.data.map(transaction => {
+                                return <Transaction transaction={transaction}/>
+                            })}
+                        </AccordionDetails>
+                    </Accordion>
                 </Box>
                 <Divider />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

@@ -4,11 +4,11 @@ import { Block as BlockModel } from '../../../Block';
 import { Block } from './Block';
 import { LinearProgress } from '@mui/material';
 
-export const Blockchain: React.FC<{ blockchain: BlockModel[] | undefined }> = ({ blockchain }) => {
+export const BlockchainLedger: React.FC<{ blockchain: BlockModel[] | undefined }> = ({ blockchain }) => {
   return (
     <Box sx={{ p: 2, overflow:'auto', position:'relative'}}>
       <Typography variant='h5' sx={{ color: 'white', mb: 4, position:'sticky'}}>
-        Blockchain
+        Blockchain Ledger
       </Typography>
       {
         blockchain ? blockchain.map((block, index) => {

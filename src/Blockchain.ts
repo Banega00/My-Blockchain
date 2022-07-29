@@ -1,8 +1,10 @@
+import axios from "axios";
 import { Block } from "./Block";
 import { MINING_REWARD, REWARD_INPUT } from "./config";
 import { calculateHash, concatAndStringify } from "./helpers";
 import { Transaction } from "./Transaction";
 import { Wallet } from "./Wallet";
+import hexToBinary from 'hex-to-binary';
 
 export class Blockchain {
     public chain:Block[];
@@ -19,7 +21,7 @@ export class Blockchain {
       this.chain.push(newBlock);
     }
   
-    replaceChain(chain, validateTransactions, onSuccess) {
+    replaceChain(chain: Block[], validateTransactions: boolean, onSuccess: Function) {
       if (chain.length <= this.chain.length) {
         console.error('The incoming chain must be longer');
         return;
@@ -34,10 +36,11 @@ export class Blockchain {
         console.error('The incoming chain has invalid data');
         return;
       }
-  
-      if (onSuccess) onSuccess();
+      
       console.log('replacing chain with', chain);
       this.chain = chain;
+  
+      if (onSuccess) onSuccess();
     }
   
     validTransactionData({ chain }) {
@@ -88,20 +91,20 @@ export class Blockchain {
       return true;
     }
   
-    static isValidChain(chain) {
+    static isValidChain(chain:Blockchain['chain']) {
       if (JSON.stringify(chain[0]) !== JSON.stringify(Block.genesis())) {
         return false
       };
   
       for (let i=1; i<chain.length; i++) {
         //validate every single block
-        const { timestamp, lastHash, hash, nonce, difficulty, data } = chain[i];
+        const { timestamp, previousHash, hash, nonce, difficulty, data } = chain[i];
         const actualLastHash = chain[i-1].hash;
         const lastDifficulty = chain[i-1].difficulty;
   
-        if (lastHash !== actualLastHash) return false;
+        if (previousHash !== actualLastHash) return false;
   
-        const validatedHash = calculateHash(concatAndStringify(timestamp, lastHash, data, nonce, difficulty));
+        const validatedHash = hexToBinary(calculateHash(concatAndStringify(timestamp, previousHash, data, nonce, difficulty)));
   
         if (hash !== validatedHash) return false;
   
@@ -110,4 +113,10 @@ export class Blockchain {
   
       return true;
     }
+
+    public static syncChain = async () =>{
+      const blocks = await axios({method:'GET',url:`${process.env.ROOT_NODE_URL}/blocks`})
+      const transactionMap = await axios({method:'GET',url:`${process.env.ROOT_NODE_URL}/transaction-pool-map`})
+      return { blocks: blocks.data, transactionMap: transactionMap.data};
+  }
   }

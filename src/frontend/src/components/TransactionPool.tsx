@@ -3,9 +3,10 @@ import Box from '@mui/material/Box'
 import { useEffect, useState } from 'react'
 import { BlockchainService } from '../services/Blockchain.service'
 import { Transaction } from './Transaction'
+import { Transaction as ITransaction } from '../../../Transaction'
 
 export interface ITransactionPool {
-    [transactionId: string]: Transaction
+    [transactionId: string]: ITransaction
 }
 
 export const TransactionPool: React.FC<{ transactionPool: ITransactionPool | undefined, setTransactionPool:Function }> = ({ transactionPool, setTransactionPool }) => {

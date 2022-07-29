@@ -36,6 +36,8 @@ export abstract class PubSub {
   abstract publish(message:MessageEvent):void;
 
   broadcastChain() {
+    console.log('CHAIN BROADCASTED!');
+    
     this.publish({
       channel: CHANNELS.BLOCKCHAIN,
       message: JSON.stringify(this.blockchain.chain)
@@ -43,6 +45,8 @@ export abstract class PubSub {
   }
 
   broadcastTransaction(transaction) {
+    console.log('TRANSACTION BROADCASTED!');
+    
     this.publish({
         channel: CHANNELS.TRANSACTION,
         message: JSON.stringify(transaction)

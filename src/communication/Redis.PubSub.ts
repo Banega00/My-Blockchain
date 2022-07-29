@@ -56,6 +56,8 @@ export class RedisPubSub extends PubSub{
                 });
                 break;
             case CHANNELS.TRANSACTION:
+                console.log('TRANSACTION ARRIVED!');
+                
                 this.transactionPool.setTransaction(parsedMessage);
                 break;
             default:

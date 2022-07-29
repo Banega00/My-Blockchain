@@ -1,7 +1,7 @@
 import { Box, Divider } from '@mui/material';
 import { Wallet } from './components/Wallet';
 import { ITransactionPool, TransactionPool } from './components/TransactionPool';
-import { Blockchain } from './components/Blockchain';
+import { BlockchainLedger } from './components/BlockchainLedger';
 import { useEffect, useState } from 'react';
 import { Blockchain as IBlockchain } from '../../../src/Blockchain';
 import { BlockchainService } from './services/Blockchain.service';
@@ -36,7 +36,7 @@ function App() {
       <Divider orientation="vertical" variant='middle'/>
       <TransactionPool transactionPool={transactionPool} setTransactionPool={setTransactionPool}/>
       <Divider orientation="vertical" variant='middle'/>
-      <Blockchain blockchain={blockchain}/>
+      <BlockchainLedger blockchain={blockchain}/>
     </Box>
   );
 }

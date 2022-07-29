@@ -1,43 +1,60 @@
-import { Request, Response, Router } from "express";
+import { Request, response, Response, Router } from "express";
 import { Blockchain } from "../Blockchain";
 import { PubSubFactory } from "../communication/PubSubFactory";
 import { TransactionMiner } from "../TransactionMiner";
 import { TransactionPool } from "../TransactionPool";
 import { Wallet } from "../Wallet";
 import { BlockchainState, getBlockchainState, saveBlockchainState } from "../storage/state-management";
+import { Transaction } from "../Transaction";
 
-let blockchain:Blockchain;
-let transactionPool:TransactionPool;
-let wallet:Wallet;
+let blockchain: Blockchain;
+let transactionPool: TransactionPool;
+let wallet: Wallet;
 
 const pubsub = PubSubFactory.getInstance();
 
-try{
-    
-    let initialData: BlockchainState = getBlockchainState();
-    
-    if(!initialData) throw new Error("No initial data")
-    if(!initialData.blockchain || !initialData.transactionPool || !initialData.wallet) throw new Error("Invalid initial data") 
+try {
 
-    
+    let initialData: BlockchainState = getBlockchainState();
+
+    if (!initialData) throw new Error("No initial data")
+    if (!initialData.blockchain || !initialData.transactionPool || !initialData.wallet) throw new Error("Invalid initial data")
+
+
     blockchain = initialData.blockchain;
     transactionPool = initialData.transactionPool
     wallet = initialData.wallet;
-    
-}catch(error){
+
+} catch (error) {
     //create new initial data
     console.log(error);
-    
+
     blockchain = new Blockchain();
     transactionPool = new TransactionPool();
     wallet = new Wallet();
 
-    saveBlockchainState({blockchain,transactionPool,wallet})
+    saveBlockchainState({ blockchain, transactionPool, wallet })
 }
 
 pubsub.blockchain = blockchain;
 pubsub.transactionPool = transactionPool;
 pubsub.wallet = wallet;
+
+
+if (process.env.ROOT_NODE_URL != `http://localhost:${process.env.PORT}/api`) {
+
+    Blockchain.syncChain()
+        .then((response) => {
+            console.log("CHAIN SYNCED");
+
+            blockchain.chain = response.blocks;
+            transactionPool.transactionMap = response.transactionMap;
+        })
+        .catch(error => {
+            console.log(error)
+            process.exit(-1)
+        })
+}
 
 console.log(`Wallet address ${wallet.publicKey}`)
 
@@ -79,18 +96,18 @@ router.post('/mine', (request: Request, response: Response) => {
 
     response.redirect('/api/blocks');
 
-    saveBlockchainState({blockchain, wallet, transactionPool})
+    saveBlockchainState({ blockchain, wallet, transactionPool })
 });
 
 //add transaction to transaction pool
 router.post('/transact', (
-    request: Request<null,null, {amount: number, recipient: string}>, 
+    request: Request<null, null, { amount: number, recipient: string }>,
     response: Response) => {
 
     const { amount, recipient } = request.body;
 
     let transaction = transactionPool.existingTransaction({ inputAddress: wallet.publicKey });
-
+    
     try {
         if (transaction) {
             transaction.update({ senderWallet: wallet, recipient, amount });
@@ -103,7 +120,7 @@ router.post('/transact', (
         }
     } catch (error: any) {
         console.log(error);
-        
+
         return response.status(400).json({ type: 'error', message: error.message });
     }
 
@@ -114,7 +131,7 @@ router.post('/transact', (
     pubsub.broadcastTransaction(transaction);
 
     response.json({ type: 'success', transaction });
-    saveBlockchainState({blockchain, wallet, transactionPool})
+    saveBlockchainState({ blockchain, wallet, transactionPool })
 });
 
 //get transactions from transaction pool
@@ -126,7 +143,7 @@ router.post('/mine-transactions', (request: Request, response: Response) => {
     transactionMiner.mineTransactions();
 
     response.redirect('/api/blocks');
-    saveBlockchainState({blockchain, wallet, transactionPool})
+    saveBlockchainState({ blockchain, wallet, transactionPool })
 });
 
 //get info about your own wallet

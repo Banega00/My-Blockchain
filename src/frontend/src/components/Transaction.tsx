@@ -1,30 +1,33 @@
 import { Accordion, AccordionDetails, AccordionSummary, Box, Card, CardContent, Divider, Typography } from '@mui/material'
 import React from 'react'
 import moment from 'moment'
-import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
-export interface Transaction {
-    id: string,
-    outputMap: {
-        [recipientWalletAddress: string]: number
-    },
-    input: {
-        timestamp: number,
-        amount: number,
-        address: string,
-        signature: {
-            r: string,
-            s: string,
-            recoveryParam: number
-        }
-    }
-}
+import { Transaction as ITransaction } from '../../../Transaction'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-export const Transaction: React.FC<{ transaction: Transaction }> = ({ transaction }) => {
+// import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
+// export interface Transaction {
+//     id: string,
+//     outputMap: {
+//         [recipientWalletAddress: string]: number
+//     },
+//     input: {
+//         timestamp: number,
+//         amount: number,
+//         address: string,
+//         signature: {
+//             r: string,
+//             s: string,
+//             recoveryParam: number
+//         }
+//     }
+// }
+
+export const Transaction: React.FC<{ transaction: ITransaction }> = ({ transaction }) => {
     return (
         <Box sx={{ mb: 1 }}>
             <Accordion>
                 <AccordionSummary
-                    expandIcon={<ExpandCircleDownIcon />}
+                    expandIcon={<ExpandMoreIcon />}
                     aria-controls="panel1a-content"
                     id="panel1a-header"
                 >
@@ -46,16 +49,16 @@ export const Transaction: React.FC<{ transaction: Transaction }> = ({ transactio
                     <Typography>
                         {Object.keys(transaction.outputMap).filter(key => key != transaction.input.address).map((key,index)=>{
                             return (
-                            <Box sx={{textAlign:'left', '& > *':{fontSize:'0.8em', flex: 1, flexBasis:'auto'}, display:'flex'}}> 
+                            <Box sx={{textAlign:'left', '& > *':{fontSize:'0.8em',mr:1, flex: 1, flexBasis:'auto'}, display:'flex'}}> 
                                 <Typography>
-                                    {index+1} | 
+                                    {index+1}| 
                                 </Typography>
-                                <Typography>
+                                <Typography sx={{wordBreak:'break-all', fontSize:'0.8em', textAlign:'left'}}>
                                     <b>
                                         {key}
                                     </b>
                                 </Typography>
-                                <Typography sx={{textAlign: 'right'}}>
+                                <Typography sx={{textAlign: 'right', fontSize:'1em'}}>
                                     <b>{transaction.outputMap[key]}</b>
                                 </Typography>
                             </Box>

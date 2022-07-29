@@ -4,7 +4,7 @@ import { verifySignature } from "./helpers";
 import { REWARD_INPUT, MINING_REWARD } from "./config";
 
 export class Transaction {
-  private id: string;
+  public id: string;
   public outputMap:{recipient?: any, [key:string]:number};
   public input:{timestamp: number, amount: number, address: Wallet['publicKey'], signature:any};
   
@@ -40,13 +40,13 @@ export class Transaction {
     }
 
     if (!this.outputMap[recipient]) {
-      this.outputMap[recipient] = amount;
+      this.outputMap[recipient] = amount;//if recipient is new
     } else {
-      this.outputMap[recipient] = this.outputMap[recipient] + amount;
+      this.outputMap[recipient] = this.outputMap[recipient] + amount;//if same recipient already exists in transaction
     }
 
     this.outputMap[senderWallet.publicKey] =
-      this.outputMap[senderWallet.publicKey] - amount;
+      this.outputMap[senderWallet.publicKey] - amount;//reduce sender remaining value
 
     this.input = this.createInput({ senderWallet, outputMap: this.outputMap });
   }

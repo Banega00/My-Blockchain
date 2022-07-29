@@ -1,7 +1,7 @@
 import { GENESIS_DATA, MINE_RATE } from "./config";
 import { calculateHash, concatAndStringify } from "./helpers";
 import { Transaction } from "./Transaction";
-const hexToBinary = require('hex-to-binary');
+import hexToBinary from 'hex-to-binary';
  
 export class Block {
     public timestamp: number;

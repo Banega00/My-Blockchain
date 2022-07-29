@@ -17,7 +17,7 @@ export class TransactionPool {
       this.transactionMap = {};
     }
   
-    setTransaction(transaction) {
+    setTransaction(transaction: Transaction) {
       this.transactionMap[transaction.id] = transaction;
     }
   
