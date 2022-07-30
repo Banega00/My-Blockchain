@@ -69,7 +69,7 @@ export class Blockchain {
             }
   
             const trueBalance = Wallet.calculateBalance({
-              chain: this.chain,
+              chain: this.chain.slice(0,i),
               address: transaction.input.address
             });
   

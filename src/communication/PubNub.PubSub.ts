@@ -1,5 +1,6 @@
 import PubNub from 'pubnub';
-import { v4 as  uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
+import { Blockchain } from '../Blockchain';
 import { saveBlockchainState } from '../storage/state-management';
 import { Transaction } from '../Transaction';
 import { CHANNELS, PubSub } from './PubSub';
@@ -11,7 +12,7 @@ export class PubNubPubSub extends PubSub {
 
     private pubnub: PubNub;
 
-    constructor(pubNubCredentials:{publishKey:string, subscribeKey:string, secretKey:string}) {
+    constructor(pubNubCredentials: { publishKey: string, subscribeKey: string, secretKey: string }) {
         super();
         this.pubnub = new PubNub({ ...pubNubCredentials, uuid: uuidv4() });
 
@@ -41,20 +42,21 @@ export class PubNubPubSub extends PubSub {
 
                 switch (channel) {
                     case CHANNELS.BLOCKCHAIN:
-                        this.blockchain.replaceChain(parsedMessage, true, () => {
+                        const chain: Blockchain['chain'] = parsedMessage;
+                        this.blockchain.replaceChain(chain, true, () => {
                             this.transactionPool.clearBlockchainTransactions(
-                                { chain: parsedMessage.chain }
+                                { chain: chain }
                             );
                         });
                         break;
                     case CHANNELS.TRANSACTION:
-                        const newTranscation = new Transaction({id: parsedMessage.id, outputMap: parsedMessage.outputMap, input: parsedMessage.input});
+                        const newTranscation = new Transaction({ id: parsedMessage.id, outputMap: parsedMessage.outputMap, input: parsedMessage.input });
                         this.transactionPool.setTransaction(newTranscation)
-                        saveBlockchainState({ blockchain: this.blockchain, wallet: this.wallet, transactionPool: this.transactionPool })
                         break;
                     default:
-                        return;
+                        break;
                 }
+                saveBlockchainState({ blockchain: this.blockchain, wallet: this.wallet, transactionPool: this.transactionPool })
             }
         }
     }

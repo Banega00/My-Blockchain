@@ -110,6 +110,7 @@ router.post('/transact', (
     
     try {
         if (transaction) {
+            transaction = new Transaction({...transaction})
             transaction.update({ senderWallet: wallet, recipient, amount });
         } else {
             transaction = wallet.createTransaction({

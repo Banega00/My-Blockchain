@@ -53,6 +53,8 @@ export class Wallet {
       const block = chain[i];
 
       for (let transaction of block.data) {
+
+        //is this address sender of the transaction
         if (transaction.input.address === address) {
           hasConductedTransaction = true;
         }
