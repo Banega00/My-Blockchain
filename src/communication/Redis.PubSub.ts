@@ -1,19 +1,21 @@
 import { Blockchain } from "../Blockchain";
-import { TransactionPool } from "../TransactionPool";
 
 import { createClient, RedisClientOptions } from 'redis';
 import { PubSub, MessageEvent, CHANNELS } from "./PubSub";
 import { Wallet } from "../Wallet";
+import { saveBlockchainState } from "../storage/state-management";
+import { Transaction } from "../Transaction";
 
 export class RedisPubSub extends PubSub{
-    private publisher;
-    private subscriber;
+    
+    private publisher:ReturnType<typeof createClient>;
+    private subscriber:ReturnType<typeof createClient>;
         
-    constructor(redisUrl: RedisClientOptions) {
+    constructor(redisConfig: RedisClientOptions) {
         super();
         
-        this.publisher = createClient(redisUrl);
-        this.subscriber = createClient(redisUrl);
+        this.publisher = createClient(redisConfig);
+        this.subscriber = createClient(redisConfig);
 
         console.log('Successfully connected to Redis PubSub')
 
@@ -25,6 +27,8 @@ export class RedisPubSub extends PubSub{
             'message',
             (channel, message) => this.handleMessage({channel, message})
         );
+
+        this.publish({'message':'test poruika', channel: CHANNELS.TEST})
     }
 
     subscribeToChannels() {
@@ -34,34 +38,41 @@ export class RedisPubSub extends PubSub{
     }
 
     publish({ channel, message }) {
-        this.subscriber.unsubscribe(channel, () => {
-            this.publisher.publish(channel, message, () => {
-                this.subscriber.subscribe(channel);
+        // this.subscriber.unsubscribe(channel, () => {
+            console.log('SALJEM BRATE!')
+            this.publisher.publish(channel, message, () =>{
+                // this.subscriber.subscribe(channel);
             });
-        });
+        // });
     }
 
     handleMessage(messageEvent:MessageEvent) {
         const {channel, message} = messageEvent;
         console.log(`Message received. Channel: ${channel}. Message: ${message}.`);
 
-        const parsedMessage = JSON.parse(message);
+        let parsedMessage:any = message;
+        try{
+            parsedMessage = JSON.parse(message);
+        }catch(error){
+            //this is parsing error - that means message is not an object, rather is string
+        }
 
         switch (channel) {
             case CHANNELS.BLOCKCHAIN:
-                this.blockchain.replaceChain(parsedMessage, true, () => {
-                    this.transactionPool.clearBlockchainTransactions({
-                        chain: parsedMessage
-                    });
+                const chain: Blockchain['chain'] = parsedMessage;
+                this.blockchain.replaceChain(chain, true, () => {
+                    this.transactionPool.clearBlockchainTransactions(
+                        { chain: chain }
+                    );
                 });
                 break;
             case CHANNELS.TRANSACTION:
-                console.log('TRANSACTION ARRIVED!');
-                
-                this.transactionPool.setTransaction(parsedMessage);
+                const newTranscation = new Transaction({ id: parsedMessage.id, outputMap: parsedMessage.outputMap, input: parsedMessage.input });
+                this.transactionPool.setTransaction(newTranscation)
                 break;
             default:
-                return;
+                break;
         }
+        saveBlockchainState({ blockchain: this.blockchain, wallet: this.wallet, transactionPool: this.transactionPool })
     }
 }

@@ -49,16 +49,16 @@ export const Transaction: React.FC<{ transaction: ITransaction }> = ({ transacti
                     <Typography>
                         {Object.keys(transaction.outputMap).filter(key => key != transaction.input.address).map((key,index)=>{
                             return (
-                            <Box sx={{textAlign:'left', '& > *':{fontSize:'0.8em',mr:1, flex: 1, flexBasis:'auto'}, display:'flex'}}> 
+                            <Box sx={{textAlign:'left', '&>*:nth-child(odd)':{fontSize:'0.8em',mr:1, flex: 1, flexBasis:'auto'}, display:'flex'}}> 
                                 <Typography>
-                                    {index+1}| 
+                                    {index+1} 
                                 </Typography>
-                                <Typography sx={{wordBreak:'break-all', fontSize:'0.8em', textAlign:'left'}}>
+                                <Typography sx={{borderLeft:'1px solid lightgray', borderRight:'1px solid lightgray', wordBreak:'break-all', pl:1, pr:1, fontSize:'0.8em', textAlign:'left'}}>
                                     <b>
                                         {key}
                                     </b>
                                 </Typography>
-                                <Typography sx={{textAlign: 'right', fontSize:'1em'}}>
+                                <Typography sx={{textAlign: 'right', fontSize:'1em', ml:1}}>
                                     <b>{transaction.outputMap[key]}</b>
                                 </Typography>
                             </Box>

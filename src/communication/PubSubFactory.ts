@@ -16,7 +16,7 @@ export class PubSubFactory {
         switch (pubSubType) {
             case PubSubType.REDIS:
                 const url = process.env.redisUrl;
-                return new RedisPubSub({url})
+                return new RedisPubSub({url, legacyMode: true})
             break;
             case PubSubType.PUBNUB:
                 const publishKey = process.env.pubnub_publishKey;
