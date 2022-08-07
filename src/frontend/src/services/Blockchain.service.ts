@@ -2,7 +2,7 @@ import axios from "axios";
 
 export class BlockchainService{
     
-    private static api_url = `http://localhost:3001/api`;
+    private static api_url = `http://localhost:3002/api`;
 
     public static getWalletInfo = async() =>{
         const response = await axios(`${this.api_url}/wallet-info`)

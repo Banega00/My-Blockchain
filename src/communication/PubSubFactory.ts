@@ -4,6 +4,7 @@ import { Wallet } from "../Wallet";
 import { PubNubPubSub } from "./PubNub.PubSub";
 import { PubSub, PubSubType } from "./PubSub";
 import { RedisPubSub } from "./Redis.PubSub";
+import { SocketPubSub } from "./Socket.PubSub";
 
 export class PubSubFactory {
     public static getInstance = (type?: PubSubType): PubSub => {
@@ -24,6 +25,9 @@ export class PubSubFactory {
                 const secretKey = process.env.pubnub_secretKey
                 if(!publishKey || !subscribeKey || !secretKey) throw new Error('PubNub credentials missing!');
                 return new PubNubPubSub({publishKey, subscribeKey, secretKey})
+            break;
+            case PubSubType.SOCKET:
+                return new SocketPubSub()
             break;
             default:
                 throw new Error("Unknown PubSub type!")

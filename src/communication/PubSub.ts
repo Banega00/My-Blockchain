@@ -14,9 +14,11 @@ export const CHANNELS = {
   TRANSACTION: 'TRANSACTION'
 };
 
-export enum PubSubType{
-  REDIS = 'REDIS',
-  PUBNUB = 'PUBNUB'
+
+export enum PubSubType {
+    REDIS = 'REDIS',
+    PUBNUB = 'PUBNUB',
+    SOCKET = "SOCKET"
 }
 
 export type MessageEvent = {message: string, channel: string};
