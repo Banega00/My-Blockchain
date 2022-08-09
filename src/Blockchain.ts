@@ -115,8 +115,8 @@ export class Blockchain {
     }
 
     public static syncChain = async () =>{
-      const blocks = await axios({method:'GET',url:`${process.env.ROOT_NODE_URL}/blocks`})
-      const transactionMap = await axios({method:'GET',url:`${process.env.ROOT_NODE_URL}/transaction-pool-map`})
+      const blocks = await axios({method:'GET',url:`${process.env.ROOT_NODE_URL}/api/blocks`})
+      const transactionMap = await axios({method:'GET',url:`${process.env.ROOT_NODE_URL}/api/transaction-pool-map`})
       return { blocks: blocks.data, transactionMap: transactionMap.data};
   }
   }

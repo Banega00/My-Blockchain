@@ -11,5 +11,6 @@ config()
 
 const clientSocket = io('http://localhost:3001');
 const clientSocket2 = connect('http://localhost:3001');
+clientSocket.emit('serverEvent','desiiiiii')
 console.log(clientSocket.connected)
 console.log(clientSocket2.connected)

@@ -52,7 +52,7 @@ export class Block {
 
         if (difficulty < 1) return 1;
 
-        if ((timestamp - originalBlock.timestamp) > MINE_RATE) return difficulty - 1;
+        if ((timestamp - originalBlock.timestamp) > MINE_RATE && difficulty > 1) return difficulty - 1;
 
         return difficulty + 1;
     }

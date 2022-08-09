@@ -41,7 +41,7 @@ pubsub.transactionPool = transactionPool;
 pubsub.wallet = wallet;
 
 
-if (process.env.ROOT_NODE_URL != `http://localhost:${process.env.PORT}/api`) {
+if (process.env.IS_ROOT_NODE?.toLowerCase() == 'false') {
 
     Blockchain.syncChain()
         .then((response) => {

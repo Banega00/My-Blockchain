@@ -39,7 +39,6 @@ export class RedisPubSub extends PubSub{
 
     publish({ channel, message }) {
         // this.subscriber.unsubscribe(channel, () => {
-            console.log('SALJEM BRATE!')
             this.publisher.publish(channel, message, () =>{
                 // this.subscriber.subscribe(channel);
             });
