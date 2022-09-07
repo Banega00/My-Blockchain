@@ -3,12 +3,13 @@ import { TransactionPool } from './TransactionPool';
 import { Wallet } from './Wallet';
 import { PubSub } from './communication/PubSub'
 import { Transaction } from './Transaction';
+import { P2P } from './communication/P2P';
 
 export class TransactionMiner {
   private blockchain:Blockchain;
   private transactionPool: TransactionPool;
   private wallet: Wallet;
-  private pubsub: PubSub;
+  private pubsub: PubSub | P2P;
   constructor(object:{ blockchain, transactionPool, wallet, pubsub }) {
     const {blockchain, transactionPool, wallet, pubsub} = object;
     this.blockchain = blockchain;

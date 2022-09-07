@@ -1,6 +1,7 @@
 import { Blockchain } from "../Blockchain";
 import { TransactionPool } from "../TransactionPool";
 import { Wallet } from "../Wallet";
+import { Communication } from "./Communication";
 
 // const credentials = {
 //   publishKey: 'pub-c-432d252e-ed92-4b6f-8f7e-b871eea60424',
@@ -23,13 +24,13 @@ export enum PubSubType {
 
 export type MessageEvent = {message: string, channel: string};
 
-export abstract class PubSub {
+export abstract class PubSub extends Communication{
   public blockchain: Blockchain;
   public transactionPool: TransactionPool;
   public wallet: Wallet;
 
   constructor() {
-
+    super();
     console.log('PubSub initialized');
   }
 

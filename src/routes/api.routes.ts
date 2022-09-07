@@ -6,12 +6,15 @@ import { TransactionPool } from "../TransactionPool";
 import { Wallet } from "../Wallet";
 import { BlockchainState, getBlockchainState, saveBlockchainState } from "../storage/state-management";
 import { Transaction } from "../Transaction";
+import { P2P } from "../communication/P2P";
+import { CommunicationFactory } from "../communication/CommunicationFactory";
 
 let blockchain: Blockchain;
 let transactionPool: TransactionPool;
 let wallet: Wallet;
 
-const pubsub = PubSubFactory.getInstance();
+
+const communication = CommunicationFactory.getInstance();
 
 try {
 
@@ -26,7 +29,7 @@ try {
     wallet = initialData.wallet;
 
 } catch (error) {
-    //create new initial data
+    //Create new empty initial data
     console.log(error);
 
     blockchain = new Blockchain();
@@ -36,9 +39,10 @@ try {
     saveBlockchainState({ blockchain, transactionPool, wallet })
 }
 
-pubsub.blockchain = blockchain;
-pubsub.transactionPool = transactionPool;
-pubsub.wallet = wallet;
+//Set initial data to pubsub
+communication.blockchain = blockchain;
+communication.transactionPool = transactionPool;
+communication.wallet = wallet;
 
 
 if (process.env.IS_ROOT_NODE?.toLowerCase() == 'false') {
@@ -58,7 +62,7 @@ if (process.env.IS_ROOT_NODE?.toLowerCase() == 'false') {
 
 console.log(`Wallet address ${wallet.publicKey}`)
 
-const transactionMiner = new TransactionMiner({ blockchain, transactionPool, wallet, pubsub });
+const transactionMiner = new TransactionMiner({ blockchain, transactionPool, wallet, pubsub: communication });
 
 const router = Router();
 
@@ -92,7 +96,7 @@ router.post('/mine', (request: Request, response: Response) => {
 
     blockchain.addBlock({ data });
 
-    pubsub.broadcastChain();
+    communication.broadcastChain();
 
     response.redirect('/api/blocks');
 
@@ -129,7 +133,7 @@ router.post('/transact', (
     transactionPool.setTransaction(transaction);
 
     //broadcast transaction to other nods in the network
-    pubsub.broadcastTransaction(transaction);
+    communication.broadcastTransaction(transaction);
 
     response.json({ type: 'success', transaction });
     saveBlockchainState({ blockchain, wallet, transactionPool })
