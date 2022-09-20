@@ -1,5 +1,7 @@
 import { BinaryToTextEncoding, createHash } from 'crypto';
 import { ec } from 'elliptic';
+import { CommunicationType } from './communication/Communication';
+import { PubSubType } from './communication/PubSub';
 
 type AllowedHashAlgorithms = 'sha256' | 'sha512' | 'md5' | 'sha1';
 
@@ -59,3 +61,37 @@ export function binaryToHex(s) {
   }
   return { valid: true, result: ret };
 }
+
+class EnvWrapper {
+	public port = +this.getProperty("BACKEND_PORT") || 3000;
+    public root_node_url = this.getProperty('ROOT_NODE_URL') || 'http://localhost:3000'
+	public env_type = this.getProperty("env_type") || 'dev';
+
+
+	public p2p_port = +this.getProperty("p2p_port") || 9000;
+ 
+	public root_node_p2p_address = this.getProperty("p2p_root").split(':')[0] || 'http://localhost';
+	public root_node_p2p_port = +this.getProperty("p2p_root").split(':')[1] || 9000;
+    
+	public is_root_node = (this.getProperty("IS_ROOT_NODE") == 'true') || false;
+	public communication_type = this.getProperty("communication_type") || 'P2P'; 
+
+    public redis = {
+        url: this.getProperty("redis_url")
+    }
+    
+    public pubnub = {
+        publishKey: this.getProperty("pubnub_publish_key"),
+        subscribeKey: this.getProperty("pubnub_subscribe_key"),
+        secretKey: this.getProperty("pubnub_secret_key")
+    }
+
+    public pubSubType = this.getProperty("pub_sub_type");
+    public wallet_data = this.getProperty("wallet_data") || 'blockchain-data';
+    private getProperty(property: string): string {
+        return process.env[property.toUpperCase()] || process.env[property.toLowerCase()] || "";
+    }
+}
+
+export const env = new EnvWrapper();
+console.log(env)

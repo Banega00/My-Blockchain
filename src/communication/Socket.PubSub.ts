@@ -2,6 +2,7 @@ import { MessageEvent, PubSub } from "./PubSub";
 import { Server, Socket } from "socket.io";
 import { PORT, server } from "../../main";
 import { io, Socket as ClientSocket } from "socket.io-client";
+import { env } from "../helpers";
 
 interface ServerToClientEvents {
     noArg: () => void;
@@ -47,7 +48,7 @@ export class SocketPubSub extends PubSub {
 
 
                 //only root node should receive info about port
-                if (process.env.IS_ROOT_NODE?.toLowerCase() == 'true') {
+                if (env.is_root_node) {
                     socket.on('port', (port) => {
                         const clientSocketConnectionURL = `http://${socket.handshake.address}:${port}`;
 
@@ -72,9 +73,9 @@ export class SocketPubSub extends PubSub {
             setTimeout(() => {
                 //first connect to root node
                 //ONLY if you are not root node - avoid connecting root node with itself
-                if (process.env.IS_ROOT_NODE?.toLowerCase() != 'false') return;
+                if (env.is_root_node) return;
 
-                const rootNodeUrl = process.env.ROOT_NODE_URL;
+                const rootNodeUrl = env.root_node_url;
                 if (!rootNodeUrl) throw new Error('Missing root node url')
 
                 this.rootClientSocket = io(rootNodeUrl);

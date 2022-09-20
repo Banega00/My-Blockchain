@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from "fs"
 import { Blockchain } from "../Blockchain"
+import { env } from "../helpers";
 import { TransactionPool } from "../TransactionPool";
 import { Wallet } from "../Wallet";
 
@@ -17,19 +18,19 @@ export const saveBlockchainState = (newBlockchainState:Partial<BlockchainState>)
             blockchainState[prop] = newBlockchainState[prop]
         }
 
-        writeFileSync(`./data/${process.env.wallet_data}`, JSON.stringify(blockchainState), {encoding:'binary'})
+        writeFileSync(`./data/${env.wallet_data}`, JSON.stringify(blockchainState), {encoding:'binary'})
 
         console.log('Blockchain state saved');
     }catch(error){
         //file does not exists - create new
-        writeFileSync(`./data/${process.env.wallet_data}`, JSON.stringify(newBlockchainState), {encoding:'binary'})
+        writeFileSync(`./data/${env.wallet_data}`, JSON.stringify(newBlockchainState), {encoding:'binary'})
 
         console.log('Blockchain state saved');
     }
 }
 
 export const getBlockchainState = ():BlockchainState =>{
-    let dataBuffer = readFileSync(`./data/${process.env.wallet_data}`)
+    let dataBuffer = readFileSync(`./data/${env.wallet_data}`)
     let blockchainState = JSON.parse(dataBuffer.toString());
 
     if(blockchainState){

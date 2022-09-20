@@ -5,11 +5,12 @@ import { TransactionPool } from "../TransactionPool";
 import { Wallet } from "../Wallet";
 import { EventEmitter } from "events";
 import { Communication } from "./Communication";
+import { env } from "../helpers";
 const net = require('net')
 
-const PORT = process.env.P2P_PORT
-const ROOT_ADDRESS = process.env.ROOT_NODE_P2P_ADDRESS ?? '::ffff:127.0.0.1';
-const ROOT_PORT = parseInt(process.env.ROOT_NODE_P2P_PORT!);
+const PORT = env.p2p_port
+const ROOT_ADDRESS = env.root_node_p2p_address ?? '::ffff:127.0.0.1';
+const ROOT_PORT = env.root_node_p2p_port!;
 
 const rootPeer: { address: string, port: number, id?: string } = { address: ROOT_ADDRESS, port: ROOT_PORT }
 let peers = [rootPeer] //this is previously connected sockets
@@ -39,7 +40,6 @@ export class P2P extends Communication{
             rootPeer.id = socket.id
             socket.on('data', data => {
                 const message = JSON.parse(data.toString());
-                console.log("Message arrived 1:",message)
                 switch (message.type) {
                     case 'peers':
                         peers = addMissingPeers(peers, message.peers);
@@ -113,7 +113,6 @@ export class P2P extends Communication{
                 peer.id = socket.id;
                 socket.on('data', data => {
                     const message = JSON.parse(data.toString());
-                    console.log("Message arrived 2:",message)
                     switch (message.type) {
                         case 'message':
                             console.log(message.message);
@@ -171,7 +170,6 @@ export class P2P extends Communication{
 
             socket.on('data', data => {
                 const message = JSON.parse(data.toString());
-                console.log("Message arrived 3:",message)
                 switch (message.type) {
                     case 'port':
                         sendMessage(socket, { type: 'peers', peers })

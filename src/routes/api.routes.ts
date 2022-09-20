@@ -8,6 +8,8 @@ import { BlockchainState, getBlockchainState, saveBlockchainState } from "../sto
 import { Transaction } from "../Transaction";
 import { P2P } from "../communication/P2P";
 import { CommunicationFactory } from "../communication/CommunicationFactory";
+import { env } from "../helpers";
+import { CommunicationType } from "../communication/Communication";
 
 let blockchain: Blockchain;
 let transactionPool: TransactionPool;
@@ -45,7 +47,7 @@ communication.transactionPool = transactionPool;
 communication.wallet = wallet;
 
 
-if (process.env.IS_ROOT_NODE?.toLowerCase() == 'false') {
+if (!env.is_root_node) {
 
     Blockchain.syncChain()
         .then((response) => {

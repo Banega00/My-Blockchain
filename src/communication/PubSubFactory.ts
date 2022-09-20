@@ -1,4 +1,5 @@
 import { Blockchain } from "../Blockchain";
+import { env } from "../helpers";
 import { TransactionPool } from "../TransactionPool";
 import { Wallet } from "../Wallet";
 import { PubNubPubSub } from "./PubNub.PubSub";
@@ -9,20 +10,20 @@ import { SocketPubSub } from "./Socket.PubSub";
 export class PubSubFactory {
     public static getInstance = (type?: PubSubType): PubSub => {
         
-        const pubSubType = type ?? process.env.PubSubType;
+        const pubSubType = type ?? env.pubSubType;
 
         if (!pubSubType) throw new Error('PubSub Type not specified!');
 
 
         switch (pubSubType) {
             case PubSubType.REDIS:
-                const url = process.env.redisUrl;
+                const url = env.redis.url;
                 return new RedisPubSub({url, legacyMode: true})
             break;
             case PubSubType.PUBNUB:
-                const publishKey = process.env.pubnub_publishKey;
-                const subscribeKey = process.env.pubnub_subscribeKey
-                const secretKey = process.env.pubnub_secretKey
+                const publishKey = env.pubnub.publishKey;
+                const subscribeKey = env.pubnub.subscribeKey
+                const secretKey = env.pubnub.secretKey
                 if(!publishKey || !subscribeKey || !secretKey) throw new Error('PubNub credentials missing!');
                 return new PubNubPubSub({publishKey, subscribeKey, secretKey})
             break;

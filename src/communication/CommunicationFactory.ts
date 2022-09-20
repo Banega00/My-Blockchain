@@ -1,3 +1,4 @@
+import { env } from "../helpers";
 import { CommunicationType, Communication } from "./Communication";
 import { P2P } from "./P2P";
 import { PubSubType } from "./PubSub";
@@ -7,16 +8,16 @@ export class CommunicationFactory {
 
     public static getInstance = (type?: CommunicationType): Communication => {
 
-        const communicationType = type ?? process.env.communicationType;
+        const communication_type = type ?? env.communication_type;
 
-        if (!communicationType) throw new Error('PubSub Type not specified!');
+        if (!communication_type) throw new Error('Communication Type not specified!');
 
 
-        switch (communicationType) {
+        switch (communication_type) {
             case PubSubType.REDIS:
             case PubSubType.PUBNUB:
             case PubSubType.SOCKET:
-                return PubSubFactory.getInstance(communicationType as PubSubType)
+                return PubSubFactory.getInstance(communication_type as PubSubType)
             case CommunicationType.P2P:
                 console.log('INITIALIZING P2P communication')
                 return new P2P()

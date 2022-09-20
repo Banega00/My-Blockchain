@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node main",
+    "start": "ts-node main & npm start --prefix ./src/frontend",
     "test": "jest"
   },
   "author": "",

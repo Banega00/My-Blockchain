@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Block } from "./Block";
 import { MINING_REWARD, REWARD_INPUT } from "./config";
-import { calculateHash, concatAndStringify } from "./helpers";
+import { calculateHash, concatAndStringify, env } from "./helpers";
 import { Transaction } from "./Transaction";
 import { Wallet } from "./Wallet";
 import hexToBinary from 'hex-to-binary';
@@ -116,8 +116,8 @@ export class Blockchain {
     }
 
     public static syncChain = async () =>{
-      const blocks = await axios({method:'GET',url:`${process.env.ROOT_NODE_URL}/api/blocks`})
-      const transactionMap = await axios({method:'GET',url:`${process.env.ROOT_NODE_URL}/api/transaction-pool-map`})
+      const blocks = await axios({method:'GET',url:`${env.root_node_url}/api/blocks`})
+      const transactionMap = await axios({method:'GET',url:`${env.root_node_url}/api/transaction-pool-map`})
       return { blocks: blocks.data, transactionMap: transactionMap.data};
   }
   }

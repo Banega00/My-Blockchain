@@ -1,0 +1,12 @@
+miner1:
+    image: miner
+    container_name: miner1
+    environment:
+      IS_ROOT_NODE: "true"
+      REACT_APP_BACKEND_PORT: 3000
+    volumes:
+       - ./data/miner1:/data/miner1
+    ports:
+      - "3000:3000"
+      - "9000:9000"
+      - "4000:4000"
