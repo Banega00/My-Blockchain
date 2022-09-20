@@ -20,7 +20,7 @@ export const Wallet:React.FC<{wallet:{address: string, balance: number} | undefi
         await BlockchainService.submitTransaction(transaction?.recipient, transaction?.amount)
         .then(response=>{
             console.log(response)
-            alert('Transaction successfully submitted');
+            alert('Successfully submitted transaction');
             setTransaction({recipient:'', amount:0})
         })
         .catch(error=>{
@@ -46,8 +46,12 @@ export const Wallet:React.FC<{wallet:{address: string, balance: number} | undefi
                         <Card sx={{ backgroundColor: 'rgba(255, 255, 255,0.75)', p: 2 }} elevation={2}>
                             <CardContent sx={{ display:'flex', flexDirection:'column', '& > *': { mb: '25px !important' } }}>
                                 <Typography>Make transaction </Typography>
-                                <TextField value={transaction?.amount} onChange={event => setTransaction({...transaction, amount: +event.target.value})} required id="outlined-basic" label="Transaction amount" variant="outlined" type="number" />
-                                <TextField value={transaction?.recipient} onChange={event => setTransaction({...transaction, recipient: event.target.value})} required id="outlined-basic" label="Recipient address" variant="outlined" />
+                                <TextField value={transaction?.amount} onChange={event => 
+                                    setTransaction({...transaction, amount: +event.target.value})} 
+                                    required id="outlined-basic" label="Transaction amount" variant="outlined" type="number" />
+                                <TextField value={transaction?.recipient} onChange={event => 
+                                    setTransaction({...transaction, recipient: event.target.value})} 
+                                    required id="outlined-basic" label="Recipient address" variant="outlined" />
                             </CardContent>
                             <Button variant="contained" onClick={submitTransaction}>Submit</Button>
                         </Card>

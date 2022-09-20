@@ -1,8 +1,7 @@
 import {config} from 'dotenv'
-import { createServer } from 'http';
-import { Server } from 'socket.io';
 config()
 
+import { createServer } from 'http';
 import app from "./src/app";
 
 export const PORT = process.env.PORT ?? 8000

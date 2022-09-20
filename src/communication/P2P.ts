@@ -31,12 +31,15 @@ export class P2P extends Communication{
         this.eventEmiiter = new EventEmitter()
         //CLIENT PART
         const p2p = this;
+        
         let socket = net.connect(ROOT_PORT, ROOT_ADDRESS, () => {
+            
             sendMessage(socket, { type: 'port', port: PORT })
             socket.id = randomString(10);
             rootPeer.id = socket.id
             socket.on('data', data => {
                 const message = JSON.parse(data.toString());
+                console.log("Message arrived 1:",message)
                 switch (message.type) {
                     case 'peers':
                         peers = addMissingPeers(peers, message.peers);
@@ -51,21 +54,30 @@ export class P2P extends Communication{
                         console.log(message.message);
                         break;
                     case 'blockchain':
-                        console.log('BLOCKCHAIN MSG')
+                        const chain: Blockchain['chain'] = message.message.chain;
+                        
+                        p2p.blockchain.replaceChain(chain, true, () => {
+                            p2p.transactionPool.clearBlockchainTransactions(
+                                { chain: chain }
+                            );
+                        });
                         break;
                     case 'transaction':
-                        console.log('Transaction MSG')
+                        const transaction = message.message.transaction
+                        const newTranscation = new Transaction({ id: transaction.id, outputMap: transaction.outputMap, input: transaction.input });
+                        p2p.transactionPool.setTransaction(newTranscation)
+                        break;
                 }
+                saveBlockchainState({ blockchain: p2p.blockchain, wallet: p2p.wallet, transactionPool: p2p.transactionPool })
             })
 
             p2p.eventEmiiter.on('message', data=>{
-                console.log("TRIGGERED")
                 switch(data.type){
                     case 'broadcastChain':
-                        sendMessage(socket, {type:'blockchain'})
+                        sendMessage(socket, {type:'blockchain', message: data.message})
                         break;
                     case 'broadcastTransaction':
-                        sendMessage(socket, {type:'transaction'})
+                        sendMessage(socket, {type:'transaction', message: data.message})
                         break;
                 }
             })
@@ -101,17 +113,27 @@ export class P2P extends Communication{
                 peer.id = socket.id;
                 socket.on('data', data => {
                     const message = JSON.parse(data.toString());
+                    console.log("Message arrived 2:",message)
                     switch (message.type) {
                         case 'message':
                             console.log(message.message);
                             break;
                         case 'blockchain':
-                            console.log('BLOCKCHAIN MSG')
+                            const chain: Blockchain['chain'] = message.message.chain;
+                            
+                            p2p.blockchain.replaceChain(chain, true, () => {
+                                p2p.transactionPool.clearBlockchainTransactions(
+                                    { chain: chain }
+                                );
+                            });
                             break;
                         case 'transaction':
-                            console.log('Transaction MSG')
+                            const transaction = message.message.transaction
+                            const newTranscation = new Transaction({ id: transaction.id, outputMap: transaction.outputMap, input: transaction.input });
+                            p2p.transactionPool.setTransaction(newTranscation)
                             break;
                     }
+                    saveBlockchainState({ blockchain: p2p.blockchain, wallet: p2p.wallet, transactionPool: p2p.transactionPool })
                 })
 
                 sendMessage(socket, { type: 'peer-port', port: PORT })
@@ -130,13 +152,12 @@ export class P2P extends Communication{
                 })
 
                 p2p.eventEmiiter.on('message', data=>{
-                    console.log("TRIGGERED")
                     switch(data.type){
                         case 'broadcastChain':
-                            sendMessage(socket, {type:'blockchain'})
+                            sendMessage(socket, {type:'blockchain', message: data.message})
                             break;
                         case 'broadcastTransaction':
-                            sendMessage(socket, {type:'transaction'})
+                            sendMessage(socket, {type:'transaction', message: data.message})
                             break;
                     }
                 })
@@ -144,12 +165,13 @@ export class P2P extends Communication{
         }
 
         //SERVER PART
-        const server = net.createServer(function (socket) {//this is currently connected socket
+        const server = net.createServer(function (socket) {
             socket.id = randomString(10);
             console.log('Client connected', socket.id)
 
             socket.on('data', data => {
                 const message = JSON.parse(data.toString());
+                console.log("Message arrived 3:",message)
                 switch (message.type) {
                     case 'port':
                         sendMessage(socket, { type: 'peers', peers })
@@ -162,22 +184,30 @@ export class P2P extends Communication{
                         console.log(message.message);
                         break;
                     case 'blockchain':
-                        console.log('BLOCKCHAIN MSG')
+                        const chain: Blockchain['chain'] = message.message.chain;
+                        
+                        p2p.blockchain.replaceChain(chain, true, () => {
+                            p2p.transactionPool.clearBlockchainTransactions(
+                                { chain: chain }
+                            );
+                        });
                         break;
                     case 'transaction':
-                        console.log('Transaction MSG')
+                        const transaction = message.message.transaction
+                        const newTranscation = new Transaction({ id: transaction.id, outputMap: transaction.outputMap, input: transaction.input });
+                        p2p.transactionPool.setTransaction(newTranscation)
                         break;
                 }
+                saveBlockchainState({ blockchain: p2p.blockchain, wallet: p2p.wallet, transactionPool: p2p.transactionPool })
             })
 
             p2p.eventEmiiter.on('message', data=>{
-                console.log("TRIGGERED")
                 switch(data.type){
                     case 'broadcastChain':
-                        sendMessage(socket, {type:'blockchain'})
+                        sendMessage(socket, {type:'blockchain', message: data.message})
                         break;
                     case 'broadcastTransaction':
-                        sendMessage(socket, {type:'transaction'})
+                        sendMessage(socket, {type:'transaction', message: data.message})
                         break;
                 }
             })
@@ -206,13 +236,13 @@ export class P2P extends Communication{
     broadcastChain() {
         console.log('CHAIN BROADCASTED!');
 
-        this.eventEmiiter.emit('message', {type: 'broadcastChain'})
+        this.eventEmiiter.emit('message', {type: 'broadcastChain', message:{chain: this.blockchain.chain}})
     }
 
     broadcastTransaction(transaction: Transaction) {
         console.log('TRANSACTION BROADCASTED!');
 
-        this.eventEmiiter.emit('message', {type: 'broadcastTransaction'})
+        this.eventEmiiter.emit('message', {type: 'broadcastTransaction', message: {transaction: transaction}})
     }
 
     handleMessage(messageEvent: MessageEvent) {

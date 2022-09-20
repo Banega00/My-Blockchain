@@ -8,16 +8,16 @@ dotenv.config();
 
 const app = express();
 
-export default app;
 app.use(cors())
 app.use(bodyParser.json());
 
-app.use(express.static(path.join(__dirname, 'client/dist')));
-
 app.use('/api', ApiRouter)
 
+app.use(express.static(path.join(__dirname, 'client/dist')));
 
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client/dist/index.html'));
 });
+
+export default app;

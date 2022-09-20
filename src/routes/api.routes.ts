@@ -62,7 +62,7 @@ if (process.env.IS_ROOT_NODE?.toLowerCase() == 'false') {
 
 console.log(`Wallet address ${wallet.publicKey}`)
 
-const transactionMiner = new TransactionMiner({ blockchain, transactionPool, wallet, pubsub: communication });
+const transactionMiner = new TransactionMiner({ blockchain, transactionPool, wallet, communication });
 
 const router = Router();
 
@@ -132,12 +132,13 @@ router.post('/transact', (
     //insert transaction in your own transaction pool
     transactionPool.setTransaction(transaction);
 
-    //broadcast transaction to other nods in the network
+    //broadcast transaction to other nodes in the network
     communication.broadcastTransaction(transaction);
 
     response.json({ type: 'success', transaction });
     saveBlockchainState({ blockchain, wallet, transactionPool })
 });
+
 
 //get transactions from transaction pool
 router.get('/transaction-pool-map', (request: Request, response: Response) => {

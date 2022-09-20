@@ -4,18 +4,19 @@ import { Wallet } from './Wallet';
 import { PubSub } from './communication/PubSub'
 import { Transaction } from './Transaction';
 import { P2P } from './communication/P2P';
+import { Communication } from './communication/Communication';
 
 export class TransactionMiner {
   private blockchain:Blockchain;
   private transactionPool: TransactionPool;
   private wallet: Wallet;
-  private pubsub: PubSub | P2P;
-  constructor(object:{ blockchain, transactionPool, wallet, pubsub }) {
-    const {blockchain, transactionPool, wallet, pubsub} = object;
+  private communication: Communication;
+  constructor(object:{ blockchain, transactionPool, wallet, communication }) {
+    const {blockchain, transactionPool, wallet, communication} = object;
     this.blockchain = blockchain;
     this.transactionPool = transactionPool;
     this.wallet = wallet;
-    this.pubsub = pubsub;
+    this.communication = communication;
   }
 
   mineTransactions() {
@@ -31,8 +32,9 @@ export class TransactionMiner {
 
     this.blockchain.addBlock({ data: validTransactions });
 
-    this.pubsub.broadcastChain();
+    this.communication.broadcastChain();
 
     this.transactionPool.clear();
   }
 }
+

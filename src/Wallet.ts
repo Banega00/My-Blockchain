@@ -7,6 +7,8 @@ export class Wallet {
   public balance: number;
   public keyPair: ec.KeyPair
   public publicKey: string;
+
+  
   constructor(wallet?:Partial<Wallet>) {
     
     this.balance = wallet?.balance ?? STARTING_BALANCE;

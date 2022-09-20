@@ -70,6 +70,8 @@ export class Transaction {
     return true;
   }
 
+  
+
   static rewardTransaction(obj:{ minerWallet:Wallet }) {
     const { minerWallet } = obj;
     return new this({
