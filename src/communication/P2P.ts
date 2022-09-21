@@ -225,7 +225,20 @@ export class P2P extends Communication{
         })
 
         function sendMessage(socket, message) {
-            socket.write(JSON.stringify(message))
+            try{
+                if(socket.destroyed) return;
+                // if(!peers.some(s => s.id = socket.id)) return;
+
+                socket.write(JSON.stringify(message),'binary',(err)=>{
+                    if(err){
+                        console.log("SOCKET ERROR HERE!")
+                        console.log(err)
+                    }
+                })
+            }catch(error){
+                console.log("SOCKET IS CLOSED!!!")
+                console.log(error)
+            }
         }
 
         server.listen(PORT)
