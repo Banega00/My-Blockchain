@@ -11,7 +11,12 @@ ENV REACT_APP_BACKEND_PORT = 3000
 
 WORKDIR /usr/src/app
 
+
 COPY package*.json ./
+
+copy src/frontend/package*.json ./src/frontend/
+
+RUN npm ci --prefix ./src/frontend/
 
 RUN npm ci
 

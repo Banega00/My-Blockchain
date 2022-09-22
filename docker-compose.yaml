@@ -1,7 +1,9 @@
-miner1:
+services:
+  miner1:
     image: miner
     container_name: miner1
     environment:
+      IS_ROOT_NODE: "true"
       P2P_ROOT: 10.241.107.215:9000
       ROOT_NODE_URL: http://10.241.107.215:3000
       REACT_APP_BACKEND_PORT: 3000

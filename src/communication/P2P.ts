@@ -231,8 +231,8 @@ export class P2P extends Communication{
         })
     }
 
-    sendMessage(socket: net.Socket, message: any) {
-        if (socket.destroyed || socket.closed) return;
+    sendMessage(socket: Socket, message: any) {
+        if (socket.destroyed || socket.isPaused()) return;
     
         socket.write(JSON.stringify(message));
     }
