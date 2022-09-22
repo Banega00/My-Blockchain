@@ -6,16 +6,22 @@ import { Wallet } from "../Wallet";
 import { EventEmitter } from "events";
 import { Communication } from "./Communication";
 import { env } from "../helpers";
-const net = require('net')
+import net from 'net'
+
+type Socket = net.Socket & {id?: string};
 
 const PORT = env.p2p_port
 const ROOT_ADDRESS = env.root_node_p2p_address ?? '::ffff:127.0.0.1';
 const ROOT_PORT = env.root_node_p2p_port!;
 
-const rootPeer: { address: string, port: number, id?: string } = { address: ROOT_ADDRESS, port: ROOT_PORT }
-let peers = [rootPeer] //this is previously connected sockets
-
-export type MessageEvent = { message: string, type: string };
+enum MessageType{
+    HANDSHAKE = 'HANDSHAKE',
+    PEERS = "PEERS",
+    PEER_DATA = "PEER_DATA",
+    MESSAGE = "MESSAGE",
+    BLOCKCHAIN = "BLOCKCHAIN",
+    TRANSACTION = "TRANSACTION"
+}
 
 const randomString = (len = 10) => {
     return Math.random().toString(36).substring(2, len + 2);
@@ -26,264 +32,258 @@ export class P2P extends Communication{
     public transactionPool: TransactionPool;
     public wallet: Wallet;
 
-    private eventEmiiter: EventEmitter;
+    private eventEmitter: EventEmitter;
+    private NODE_ID: string;
+    private peers:{[id: string]: any};
     constructor() {
         super();
-        this.eventEmiiter = new EventEmitter()
-        //CLIENT PART
-        const p2p = this;
+        this.eventEmitter = new EventEmitter()
         
-        let socket = net.connect(ROOT_PORT, ROOT_ADDRESS, () => {
-            
-            sendMessage(socket, { type: 'port', port: PORT })
-            socket.id = randomString(10);
-            rootPeer.id = socket.id
-            socket.on('data', data => {
-                const message = JSON.parse(data.toString());
-                switch (message.type) {
-                    case 'peers':
-                        peers = addMissingPeers(peers, message.peers);
-                        peers.forEach(peer => {
-                            //because you are already connected to root server
-                            if (peer.address == ROOT_ADDRESS && peer.port == ROOT_PORT) return;
-
-                            connectToPeer(peer)
-                        })
-                        break;
-                    case 'message':
-                        console.log(message.message);
-                        break;
-                    case 'blockchain':
-                        const chain: Blockchain['chain'] = message.message.chain;
-                        
-                        p2p.blockchain.replaceChain(chain, true, () => {
-                            p2p.transactionPool.clearBlockchainTransactions(
-                                { chain: chain }
-                            );
-                        });
-                        break;
-                    case 'transaction':
-                        const transaction = message.message.transaction
-                        const newTranscation = new Transaction({ id: transaction.id, outputMap: transaction.outputMap, input: transaction.input });
-                        p2p.transactionPool.setTransaction(newTranscation)
-                        break;
-                }
-                saveBlockchainState({ blockchain: p2p.blockchain, wallet: p2p.wallet, transactionPool: p2p.transactionPool })
-            })
-
-            p2p.eventEmiiter.on('message', data=>{
-                switch(data.type){
-                    case 'broadcastChain':
-                        sendMessage(socket, {type:'blockchain', message: data.message})
-                        break;
-                    case 'broadcastTransaction':
-                        sendMessage(socket, {type:'transaction', message: data.message})
-                        break;
-                }
-            })
-
-            process.stdin.on('data', data => {
-                if (socket.destroyed) return;
-                sendMessage(socket, { type: 'message', message: data.toString() })
-            })
-
-            socket.on('close', () => {
-                console.log("Removing", socket.id)
-                peers = peers.filter(peer => peer.id != socket.id)
-                console.log(peers.map(peer => {
-                    return { id: peer.id, port: peer.port }
-                }));
-                socket.destroy()
-            })
-        })
-
-        function addMissingPeers(oldPeers, newPeers) {
-            for (const newPeer of newPeers) {
-                if (oldPeers.some(peer => peer.address == newPeer.address && peer.port == newPeer.port)) continue;
-
-                oldPeers.push(newPeer)
-            }
-            return oldPeers
-        }
-
-        function connectToPeer(peer) {
-            console.log('Connecting to client', peer.port)
-            let socket = net.connect(peer.port, peer.address, () => {
-                socket.id = randomString(10);
-                peer.id = socket.id;
-                socket.on('data', data => {
-                    const message = JSON.parse(data.toString());
-                    switch (message.type) {
-                        case 'message':
-                            console.log(message.message);
-                            break;
-                        case 'blockchain':
-                            const chain: Blockchain['chain'] = message.message.chain;
-                            
-                            p2p.blockchain.replaceChain(chain, true, () => {
-                                p2p.transactionPool.clearBlockchainTransactions(
-                                    { chain: chain }
-                                );
-                            });
-                            break;
-                        case 'transaction':
-                            const transaction = message.message.transaction
-                            const newTranscation = new Transaction({ id: transaction.id, outputMap: transaction.outputMap, input: transaction.input });
-                            p2p.transactionPool.setTransaction(newTranscation)
-                            break;
-                    }
-                    saveBlockchainState({ blockchain: p2p.blockchain, wallet: p2p.wallet, transactionPool: p2p.transactionPool })
-                })
-
-                sendMessage(socket, { type: 'peer-port', port: PORT })
-
-                process.stdin.on('data', data => {
-                    if (socket.destroyed) return;
-
-                    sendMessage(socket, { type: 'message', message: data.toString() })
-                })
-
-                socket.on('close', () => {
-                    console.log("Removing", socket.id)
-                    peers = peers.filter(peer => peer.id != socket.id)
-                    console.log(peers.map(peer => peer.port));
-                    socket.destroy()
-                })
-
-                p2p.eventEmiiter.on('message', data=>{
-                    switch(data.type){
-                        case 'broadcastChain':
-                            sendMessage(socket, {type:'blockchain', message: data.message})
-                            break;
-                        case 'broadcastTransaction':
-                            sendMessage(socket, {type:'transaction', message: data.message})
-                            break;
-                    }
-                })
-            })
-        }
-
-        //SERVER PART
-        const server = net.createServer(function (socket) {
-            socket.id = randomString(10);
-            console.log('Client connected', socket.id)
-
-            socket.on('data', data => {
-                const message = JSON.parse(data.toString());
-                switch (message.type) {
-                    case 'port':
-                        sendMessage(socket, { type: 'peers', peers })
-                        peers = addMissingPeers(peers, [{ id: socket.id, address: socket.remoteAddress, port: message.port }])
-                        break;
-                    case 'peer-port':
-                        peers = addMissingPeers(peers, [{ id: socket.id, address: socket.remoteAddress, port: message.port }])
-                        break;
-                    case 'message':
-                        console.log(message.message);
-                        break;
-                    case 'blockchain':
-                        const chain: Blockchain['chain'] = message.message.chain;
-                        
-                        p2p.blockchain.replaceChain(chain, true, () => {
-                            p2p.transactionPool.clearBlockchainTransactions(
-                                { chain: chain }
-                            );
-                        });
-                        break;
-                    case 'transaction':
-                        const transaction = message.message.transaction
-                        const newTranscation = new Transaction({ id: transaction.id, outputMap: transaction.outputMap, input: transaction.input });
-                        p2p.transactionPool.setTransaction(newTranscation)
-                        break;
-                }
-                saveBlockchainState({ blockchain: p2p.blockchain, wallet: p2p.wallet, transactionPool: p2p.transactionPool })
-            })
-
-            p2p.eventEmiiter.on('message', data=>{
-                switch(data.type){
-                    case 'broadcastChain':
-                        sendMessage(socket, {type:'blockchain', message: data.message})
-                        break;
-                    case 'broadcastTransaction':
-                        sendMessage(socket, {type:'transaction', message: data.message})
-                        break;
-                }
-            })
-
-            process.stdin.on('data', data => {
-                if (socket.destroyed) return;
-
-                sendMessage(socket, { type: 'message', message: data.toString() })
-            })
-
-            socket.on('close', () => {
-                console.log("Removing", socket.id)
-                peers = peers.filter(peer => peer.id != socket.id)
-                console.log(peers.map(peer => peer.port));
-                socket.destroy()
-            })
-        })
-
-        function sendMessage(socket, message) {
-            try{
-                if(socket.destroyed) return;
-                // if(!peers.some(s => s.id = socket.id)) return;
-
-                socket.write(JSON.stringify(message),'binary',(err)=>{
-                    if(err){
-                        console.log("SOCKET ERROR HERE!")
-                        console.log(err)
-                    }
-                })
-            }catch(error){
-                console.log("SOCKET IS CLOSED!!!")
-                console.log(error)
-            }
-        }
-
-        server.listen(PORT)
+        this.NODE_ID = randomString();
+        this.peers = {}
+        console.log(`NODE ${this.NODE_ID} DEPLOYED`)
+        this.initialize();
     }
 
-    broadcastChain() {
-        console.log('CHAIN BROADCASTED!');
+    async initialize() {
+        const myLocaleAddress = await this.getLocaleIpAddress();
+        //SERVER
+        const server = net.createServer(this.handleClientSocket.bind(this))
+        server.listen(PORT);
 
-        this.eventEmiiter.emit('message', {type: 'broadcastChain', message:{chain: this.blockchain.chain}})
-    }
-
-    broadcastTransaction(transaction: Transaction) {
-        console.log('TRANSACTION BROADCASTED!');
-
-        this.eventEmiiter.emit('message', {type: 'broadcastTransaction', message: {transaction: transaction}})
-    }
-
-    handleMessage(messageEvent: MessageEvent) {
-        const { type, message } = messageEvent;
-
-        let parsedMessage: any = message;
+        //CLIENT
         try {
-            parsedMessage = JSON.parse(message);
-        } catch (error) {
-            //this is parsing error - that means message is not an object, rather is string
-        }
+            const clientSocket: Socket = await this.connectClientToServer(ROOT_ADDRESS, ROOT_PORT);
+            console.log("Successfully connected to server")
+            clientSocket.id = this.NODE_ID
+            const address = myLocaleAddress
 
-        switch (type) {
-            case 'blockchain':
-                const chain: Blockchain['chain'] = parsedMessage;
+            this.sendMessage(clientSocket, { type: MessageType.HANDSHAKE, port: PORT, address, node_id: this.NODE_ID })
+
+            this.registerSendMessageOnInput(clientSocket)
+            this.registerBlockchainEvents(clientSocket)
+
+            clientSocket.on('data', data => this.handleMessageFromServer(clientSocket, data))
+
+
+        } catch (error) {
+            console.log("Error connecting to server")
+            console.log(error);
+        }
+    }
+
+    handleClientSocket(socket: Socket) {
+        this.registerSendMessageOnInput(socket)
+        this.registerBlockchainEvents(socket)
+        socket.on('data', buffer =>{
+            const data = JSON.parse(buffer.toString())
+            
+            switch(data.type){
+                case MessageType.HANDSHAKE:
+                    const { node_id, port, address } = data;
+                    if(node_id != this.NODE_ID) this.sendAllPeers(socket)
+                    this.addNewPeer({node_id, port, address})
+                    socket.id = node_id
+                    break;
+                case MessageType.PEER_DATA:
+                    this.peers[data.node_id] = { address: data.address, port: data.port}
+                    socket.id = data.node_id                
+                    break;
+                case MessageType.MESSAGE:
+                    console.log(`${data.peer_id}: ${data.message}`)
+                    break;
+                case MessageType.BLOCKCHAIN:
+                    const chain: Blockchain['chain'] = data.message.chain;
+                    this.blockchain.replaceChain(chain, true, () => {
+                        this.transactionPool.clearBlockchainTransactions(
+                            { chain: chain }
+                        );
+                    });
+                    break;
+                case MessageType.TRANSACTION:
+                    const { id, outputMap, input } = data.message.transaction
+                    const newTransaction = new Transaction({ id, outputMap, input });
+                    this.transactionPool.setTransaction(newTransaction)
+                    break;
+            }
+        })
+        saveBlockchainState({ blockchain: this.blockchain, wallet: this.wallet, transactionPool: this.transactionPool })
+        this.closeSocket(socket)
+    
+        // socket.on('end', socket.end);
+        // socket.on('close', socket.end);
+    }
+
+    registerBlockchainEvents(socket: Socket){
+        this.eventEmitter.on('message', data =>{
+            switch(data.type){
+                case 'broadcastChain':
+                    this.sendMessage(socket, {type: MessageType.BLOCKCHAIN, message: data.message})
+                    break;
+                case 'broadcastTransaction':
+                    this.sendMessage(socket, {type:MessageType.TRANSACTION, message: data.message})
+                    break;
+            }
+        })
+        saveBlockchainState({ blockchain: this.blockchain, wallet: this.wallet, transactionPool: this.transactionPool })
+    }
+
+    sendAllPeers(socket: net.Socket){
+        this.sendMessage(socket, {type: MessageType.PEERS, peers: this.peers, my_root: {id: this.NODE_ID}})
+    }
+    
+    addNewPeer(obj:{node_id: string, port: number, address: string}){
+        const { node_id, port, address } = obj;
+        if(node_id == this.NODE_ID){
+            console.log("HANDSHAKE TO MYSELF")
+        }else{
+            this.peers[node_id] = {port, address}
+            console.log("NEW PEER ADDED", this.peers[node_id])
+        }
+        console.log("PEERS:", this.peers)
+    }
+
+    closeSocket(socket: Socket){
+        socket.on('end',()=>{
+            console.log(`Connection with socket ${socket.id} closed`)
+    
+            if(socket.id && this.peers[socket.id]) delete this.peers[socket.id];
+    
+            socket.end();
+        })
+    }
+    
+    connectClientToServer(address: string, port: number): Promise<net.Socket> {
+        return new Promise((resolve, reject) => {
+            const socket = net.connect({ port: port, host: address,  }, () => {
+                resolve(socket)
+            }).on('error', (error) => reject(error))
+        })
+    }
+
+    registerSendMessageOnInput(socket: net.Socket) {
+        process.stdin.on('data', data=>{
+            if(data.toString().startsWith('peers')){
+                console.log("PEEROVI",this.peers)
+                return;
+            }
+            this.sendMessage(socket, { type: MessageType.MESSAGE, message: data.toString(), peer_id: this.NODE_ID})
+        })
+    }
+
+    handleMessageFromServer(clientSocket: Socket, buffer: Buffer) {
+        const data = JSON.parse(buffer.toString())
+    
+        switch (data.type) {
+            case MessageType.PEERS:
+                this.peers = data.peers
+                
+                //connect to all peers except my_root (bcs you are already connected to it)
+                for(const peer_id in this.peers){
+                    this.connectToPeer(this.peers[peer_id].address, this.peers[peer_id].port, peer_id)
+    
+                }
+                this.peers[data.my_root.id] = { address: ROOT_ADDRESS, port: ROOT_PORT }
+                console.log('PEERS RECEIVED', this.peers)
+                clientSocket.id = data.my_root.id;
+                break;
+            case MessageType.MESSAGE:
+                console.log(`${data.peer_id}: ${data.message}`)
+                break;
+            case MessageType.BLOCKCHAIN:
+                const chain: Blockchain['chain'] = data.message.chain;
                 this.blockchain.replaceChain(chain, true, () => {
                     this.transactionPool.clearBlockchainTransactions(
                         { chain: chain }
                     );
                 });
                 break;
-            case 'transaction':
-                const newTranscation = new Transaction({ id: parsedMessage.id, outputMap: parsedMessage.outputMap, input: parsedMessage.input });
-                this.transactionPool.setTransaction(newTranscation)
-                break;
-            default:
+            case MessageType.TRANSACTION:
+                const {id , outputMap, input} = data.message.transaction
+                const newTransaction = new Transaction({ id, outputMap, input });
+                this.transactionPool.setTransaction(newTransaction)
                 break;
         }
         saveBlockchainState({ blockchain: this.blockchain, wallet: this.wallet, transactionPool: this.transactionPool })
+        this.closeSocket(clientSocket)
     }
+
+    async connectToPeer(address:string, port:number, peer_id?: string){
+        const socket: Socket = await this.connectClientToServer(address, port);
+    
+        const myLocaleAddress = await this.getLocaleIpAddress();
+        this.sendMessage(socket, {type: MessageType.PEER_DATA, node_id: this.NODE_ID, port: PORT, address: myLocaleAddress })
+    
+        console.log("Successfully connected to peer", peer_id)
+        socket.id = peer_id;
+        socket.on('data', data => this.handleMessageFromServer(socket, data))
+        this.registerSendMessageOnInput(socket)
+        this.registerBlockchainEvents(socket)
+    
+        this.closeSocket(socket)
+    }
+
+    getLocaleIpAddress() {
+        return new Promise((resolve, reject) => {
+            require('dns').lookup(require('os').hostname(), function (_, address, __) {
+                resolve(address);
+            })
+        })
+    }
+
+    sendMessage(socket: net.Socket, message: any) {
+        if (socket.destroyed || socket.closed) return;
+    
+        socket.write(JSON.stringify(message));
+    }
+
+    randomString = (len = 10) => {
+        return Math.random().toString(36).substring(2, len + 2);
+    }
+    
+
+    
+
+    broadcastChain() {
+        console.log('CHAIN BROADCASTED!');
+
+        this.eventEmitter.emit('message', {type: 'broadcastChain', message:{chain: this.blockchain.chain}})
+    }
+
+    broadcastTransaction(transaction: Transaction) {
+        console.log('TRANSACTION BROADCASTED!');
+
+        this.eventEmitter.emit('message', {type: 'broadcastTransaction', message: {transaction: transaction}})
+    }
+
+    // handleMessage(messageEvent: MessageEvent) {
+    //     const { type, message } = messageEvent;
+
+    //     let parsedMessage: any = message;
+    //     try {
+    //         parsedMessage = JSON.parse(message);
+    //     } catch (error) {
+    //         //this is parsing error - that means message is not an object, rather is string
+    //     }
+
+    //     switch (type) {
+    //         case 'blockchain':
+    //             const chain: Blockchain['chain'] = parsedMessage;
+    //             this.blockchain.replaceChain(chain, true, () => {
+    //                 this.transactionPool.clearBlockchainTransactions(
+    //                     { chain: chain }
+    //                 );
+    //             });
+    //             break;
+    //         case 'transaction':
+    //             const newTranscation = new Transaction({ id: parsedMessage.id, outputMap: parsedMessage.outputMap, input: parsedMessage.input });
+    //             this.transactionPool.setTransaction(newTranscation)
+    //             break;
+    //         default:
+    //             break;
+    //     }
+    //     saveBlockchainState({ blockchain: this.blockchain, wallet: this.wallet, transactionPool: this.transactionPool })
+    // }
 }
 
 
